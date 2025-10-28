@@ -297,20 +297,21 @@ resource "nxos_ipv4_interface_address" "subinterface_ipv4_secondary_interface_ad
 }
 
 resource "nxos_icmpv4_vrf" "subinterface_icmpv4_vrf" {
-  for_each = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != "" }
+  for_each = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != [] }
   device   = each.value.device
   vrf_name = each.value.vrf
 }
 
 resource "nxos_icmpv4_interface" "subinterface_icmpv4_interface" {
-  for_each     = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != "" }
-  device       = each.value.device
+  for_each     = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != [] && v.icmp_control != "" }
   vrf_name     = each.value.vrf
-  interface_id = nxos_ipv4_interface.subinterface_ipv4_interface[each.key].interface_id
+  device       = each.value.device
+  interface_id = nxos_subinterface.subinterface[each.key].interface_id
   control      = each.value.icmp_control
 
   depends_on = [
-    nxos_icmpv4_vrf.subinterface_icmpv4_vrf
+    nxos_icmpv4_vrf.subinterface_icmpv4_vrf,
+    nxos_subinterface.subinterface
   ]
 }
 
