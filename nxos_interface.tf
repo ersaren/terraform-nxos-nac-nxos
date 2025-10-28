@@ -3,7 +3,7 @@ locals {
     for device in local.devices : [
       for int in try(local.device_config[device.name].interfaces.ethernets, []) : {
         key           = format("%s/%s", device.name, int.id)
-        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups_config[device.name] : yamlencode(ig.configuration) if ig.name == g][0], "")]))
+        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups : yamlencode(ig.configuration) if ig.name == g][0], "")]))
       }
     ]
   ])
@@ -297,14 +297,16 @@ resource "nxos_ipv4_interface_address" "subinterface_ipv4_secondary_interface_ad
 }
 
 resource "nxos_icmpv4_vrf" "subinterface_icmpv4_vrf" {
-  for_each = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != [] }
+  for_each = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != "" }
+  device   = each.value.device
   vrf_name = each.value.vrf
 }
 
 resource "nxos_icmpv4_interface" "subinterface_icmpv4_interface" {
-  for_each     = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != [] }
+  for_each     = { for v in local.interfaces_subinterfaces : v.key => v if v.icmp_control != "" }
+  device       = each.value.device
   vrf_name     = each.value.vrf
-  interface_id = nxos_ipv4_interface.subinterface_ipv4_interface[each.value.key].interface_id
+  interface_id = nxos_ipv4_interface.subinterface_ipv4_interface[each.key].interface_id
   control      = each.value.icmp_control
 
   depends_on = [
@@ -336,7 +338,7 @@ locals {
     for device in local.devices : [
       for int in try(local.device_config[device.name].interfaces.port_channels, []) : {
         key           = format("%s/%s", device.name, int.id)
-        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups_config[device.name] : yamlencode(ig.configuration) if ig.name == g][0], "")]))
+        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups : yamlencode(ig.configuration) if ig.name == g][0], "")]))
       }
     ]
   ])
@@ -471,7 +473,7 @@ locals {
     for device in local.devices : [
       for int in try(local.device_config[device.name].interfaces.loopbacks, []) : {
         key           = format("%s/%s", device.name, int.id)
-        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups_config[device.name] : yamlencode(ig.configuration) if ig.name == g][0], "")]))
+        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups : yamlencode(ig.configuration) if ig.name == g][0], "")]))
       }
     ]
   ])
@@ -580,7 +582,7 @@ locals {
     for device in local.devices : [
       for int in try(local.device_config[device.name].interfaces.vlans, []) : {
         key           = format("%s/%s", device.name, int.id)
-        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups_config[device.name] : yamlencode(ig.configuration) if ig.name == g][0], "")]))
+        configuration = yamldecode(provider::utils::yaml_merge([for g in try(int.interface_groups, []) : try([for ig in local.interface_groups : yamlencode(ig.configuration) if ig.name == g][0], "")]))
       }
     ]
   ])
