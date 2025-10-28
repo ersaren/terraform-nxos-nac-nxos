@@ -1,4 +1,3 @@
-
 resource "nxos_pim" "pim" {
   for_each    = { for device in local.devices : device.name => device if(try(length(local.device_config[device.name].routing.pim.vrfs), 0) > 0) }
   device      = each.key
@@ -45,12 +44,12 @@ resource "nxos_pim_vrf" "pim_vrf" {
 }
 
 resource "nxos_pim_ssm_range" "pim_ssm_range" {
-  for_each     = { for v in local.routing_pim_vrfs : v.key => v }
+  for_each     = { for v in local.routing_pim_vrfs : v.key => v if try(length(v.ssm_ranges), 0) > 0 || v.ssm_prefix_list != "" || v.ssm_route_map != "" || v.ssm_none != false }
   vrf_name     = nxos_pim_vrf.pim_vrf[each.key].name
-  group_list_1 = try(each.value.ssm_ranges[0], null)
-  group_list_2 = try(each.value.ssm_ranges[1], null)
-  group_list_3 = try(each.value.ssm_ranges[2], null)
-  group_list_4 = try(each.value.ssm_ranges[3], null)
+  group_list_1 = try(each.value.ssm_ranges[0].group_list_1, null)
+  group_list_2 = try(each.value.ssm_ranges[1].group_list_1, null)
+  group_list_3 = try(each.value.ssm_ranges[2].group_list_1, null)
+  group_list_4 = try(each.value.ssm_ranges[3].group_list_1, null)
   prefix_list  = each.value.ssm_prefix_list
   route_map    = each.value.ssm_route_map
   ssm_none     = each.value.ssm_none
